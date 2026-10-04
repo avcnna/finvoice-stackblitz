@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>FinVoice — Realtime Voice Transaction</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+    <style>
+      :root {
+        --ink: #eaf4ff;
+        --muted: #8fa4bc;
+        --cyan: #44e9ff;
+        --violet: #a78bfa;
+        --screen: #0b1120;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #060912;
+        color: var(--ink);
+        font-family: Arial, 'DM Sans', sans-serif;
+      }
+      body {
+        overflow-x: hidden;
+      }
+      button {
+        font-family: inherit;
+      }
+      .finvoice-shell {
+        min-height: 100vh;
+        background: radial-gradient(
+            circle at 18% 42%,
+            rgba(42, 211, 255, 0.13),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at 83% 58%,
+            rgba(133, 92, 246, 0.13),
+            transparent 33%
+          ),
+          linear-gradient(135deg, #05070d, #09101c 48%, #060812);
+      }
+      .hero-wrap {
+        width: 100%;
+        max-width: 1250px;
+        margin: auto;
+        padding: 28px 20px;
+      }
+      .eyebrow {
+        color: #76e9ff;
+        font-family: monospace;
+        font-size: 11px;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+      .phone-stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 36px;
+      }
+      .phone {
+        width: min(330px, 92vw);
+        height: 650px;
+        padding: 8px;
+        border-radius: 42px;
+        background: linear-gradient(145deg, #2a3548, #080c14 35%, #1f2b3c);
+        box-shadow: 0 28px 65px rgba(0, 0, 0, 0.52),
+          0 0 0 1px rgba(178, 214, 255, 0.12), 0 0 34px rgba(54, 180, 255, 0.11);
+        flex: none;
+      }
+      .screen {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 35px;
+        background: var(--screen);
+        border: 1px solid rgba(207, 230, 255, 0.08);
+      }
+      .notch {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 92px;
+        height: 25px;
+        border-radius: 0 0 15px 15px;
+        background: #05070d;
+      }
+      .home-screen {
+        background: radial-gradient(
+            circle at 70% 22%,
+            rgba(65, 104, 199, 0.4),
+            transparent 23%
+          ),
+          linear-gradient(150deg, #101d35, #060a14 65%, #111225);
+      }
+      .finance-screen {
+        background: linear-gradient(165deg, #0d1625, #080c15);
+      }
+      .statusbar {
+        position: relative;
+        z-index: 4;
+        padding: 12px 24px 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        font-weight: bold;
+      }
+      .widget {
+        position: relative;
+        z-index: 3;
+        margin: 20px 15px 0;
+        padding: 17px;
+        border: 1px solid rgba(166, 234, 255, 0.24);
+        border-radius: 24px;
+        background: linear-gradient(
+          125deg,
+          rgba(19, 43, 69, 0.78),
+          rgba(21, 18, 48, 0.66)
+        );
+        box-shadow: inset 0 1px rgba(255, 255, 255, 0.11),
+          0 14px 34px rgba(1, 7, 18, 0.27);
+        backdrop-filter: blur(14px);
+      }
+      .mic-button {
+        width: 72px;
+        height: 72px;
+        flex: none;
+        border: 0;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #06111a;
+        background: linear-gradient(135deg, #6ff5ff, #63a9ff);
+        box-shadow: 0 12px 24px rgba(32, 151, 255, 0.32);
+        cursor: pointer;
+      }
+      .mic-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.75;
+      }
+      .is-listening .mic-button {
+        animation: micPulse 1.15s infinite;
+      }
+      @keyframes micPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(79, 226, 255, 0.55),
+            0 12px 24px rgba(32, 151, 255, 0.32);
+        }
+        70% {
+          box-shadow: 0 0 0 17px rgba(79, 226, 255, 0),
+            0 12px 24px rgba(32, 151, 255, 0.32);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(79, 226, 255, 0),
+            0 12px 24px rgba(32, 151, 255, 0.32);
+        }
+      }
+      .wave {
+        height: 24px;
+        display: none;
+        align-items: center;
+        gap: 3px;
+      }
+      .is-listening .wave {
+        display: flex;
+      }
+      .wave b {
+        width: 3px;
+        border-radius: 20px;
+        background: #6defff;
+        animation: wave 0.7s ease-in-out infinite alternate;
+      }
+      .wave b:nth-child(1) {
+        height: 7px;
+      }
+      .wave b:nth-child(2) {
+        height: 17px;
+        animation-delay: 0.1s;
+      }
+      .wave b:nth-child(3) {
+        height: 10px;
+        animation-delay: 0.2s;
+      }
+      .wave b:nth-child(4) {
+        height: 21px;
+        animation-delay: 0.08s;
+      }
+      .wave b:nth-child(5) {
+        height: 9px;
+        animation-delay: 0.3s;
+      }
+      @keyframes wave {
+        to {
+          transform: scaleY(0.35);
+          opacity: 0.45;
+        }
+      }
+
+      .transcript-box {
+        max-height: 76px;
+        overflow: auto;
+        word-break: break-word;
+      }
+      .transcript-final {
+        color: #d9fbff;
+      }
+      .transcript-interim {
+        color: #7993a9;
+      }
+      .ai-processing {
+        animation: aiGlow 0.8s infinite alternate;
+      }
+      @keyframes aiGlow {
+        to {
+          opacity: 0.55;
+        }
+      }
+
+      .confirm-box {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 13px;
+        border: 1px solid rgba(167, 139, 250, 0.3);
+        background: rgba(167, 139, 250, 0.08);
+      }
+      .confirm-actions {
+        display: flex;
+        gap: 7px;
+        margin-top: 8px;
+      }
+      .confirm-actions button {
+        flex: 1;
+        padding: 8px;
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .confirm-btn {
+        border: 0;
+        background: #a78bfa;
+        color: #120d24;
+      }
+      .cancel-btn {
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.04);
+        color: #dbeafe;
+      }
+
+      .success-box {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 13px;
+        border: 1px solid rgba(110, 255, 190, 0.25);
+        background: rgba(52, 211, 153, 0.08);
+      }
+      .app-grid {
+        position: absolute;
+        z-index: 2;
+        bottom: 76px;
+        left: 20px;
+        right: 20px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px 13px;
+      }
+      .app-icon {
+        width: 45px;
+        height: 45px;
+        margin: auto;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: rgba(226, 241, 255, 0.11);
+        box-shadow: inset 0 1px rgba(255, 255, 255, 0.15);
+      }
+      .search-pill {
+        position: absolute;
+        z-index: 2;
+        bottom: 20px;
+        left: 18px;
+        right: 18px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        border-radius: 22px;
+        background: rgba(228, 243, 255, 0.12);
+        color: #d2e4f5;
+        font-size: 12px;
+      }
+      .flow {
+        width: 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 9px;
+        color: #8ca9c4;
+      }
+      .flow-line {
+        width: 2px;
+        height: 43px;
+        background: linear-gradient(#57edff, #9d7cff);
+        box-shadow: 0 0 14px #4de6ff;
+      }
+      .flow.active .flow-line {
+        animation: flowPulse 0.7s infinite alternate;
+      }
+      @keyframes flowPulse {
+        to {
+          opacity: 0.25;
+          transform: scaleY(0.8);
+        }
+      }
+
+      .money-card {
+        margin: 19px 15px 10px;
+        padding: 15px;
+        border-radius: 18px;
+        background: linear-gradient(125deg, #172a44, #10192d);
+        border: 1px solid rgba(113, 206, 255, 0.17);
+      }
+      .metric-value {
+        transition: 0.35s;
+      }
+      .metric-value.changed {
+        color: #72f4ff;
+        transform: scale(1.04);
+      }
+      .transaction-list {
+        padding: 4px 15px 30px;
+        max-height: 470px;
+        overflow: auto;
+      }
+      .tx-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(185, 215, 255, 0.075);
+      }
+      .tx-icon {
+        width: 31px;
+        height: 31px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #17263b;
+        color: #8eefff;
+      }
+      .voice-row {
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        color: inherit;
+        background: linear-gradient(
+          90deg,
+          rgba(61, 228, 255, 0.12),
+          rgba(145, 105, 255, 0.07)
+        );
+        border-radius: 13px;
+        padding: 10px 7px;
+        margin: 5px 0;
+        animation: reveal 0.4s ease;
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .detail-sheet {
+        display: none;
+        position: absolute;
+        z-index: 20;
+        inset: 0;
+        padding: 67px 18px 18px;
+        background: rgba(6, 11, 20, 0.97);
+        backdrop-filter: blur(10px);
+      }
+      .detail-sheet.open {
+        display: block;
+        animation: reveal 0.2s ease;
+      }
+      .detail-card {
+        padding: 18px;
+        border: 1px solid rgba(126, 219, 255, 0.19);
+        border-radius: 22px;
+        background: linear-gradient(150deg, #142238, #0d1422);
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 0;
+        font-size: 11px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .detail-row span:last-child {
+        color: #dcecff;
+        text-align: right;
+        max-width: 60%;
+      }
+      @media (max-width: 700px) {
+        .hero-wrap {
+          padding: 22px 14px;
+        }
+        .phone-stage {
+          flex-direction: column;
+          gap: 22px;
+        }
+        .phone {
+          width: min(340px, 94vw);
+          height: 645px;
+        }
+        .flow {
+          width: 100%;
+          height: 42px;
+          flex-direction: row;
+          justify-content: center;
+        }
+        .flow-line {
+          width: 48px;
+          height: 2px;
+        }
+        .flow.active .flow-line {
+          animation: flowH 0.7s infinite alternate;
+        }
+        @keyframes flowH {
+          to {
+            opacity: 0.25;
+            transform: scaleX(0.7);
+          }
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="finvoice-shell">
+      <header class="hero-wrap">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="eyebrow">VOICE-TO-TRANSACTION • REALTIME DEMO</p>
+            <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+              FINVOICE
+            </h1>
+            <p class="mt-3 text-xl font-semibold text-cyan-100">
+              Speak. Record. Done.
+            </p>
+            <p class="mt-1 max-w-xl text-sm text-slate-400">
+              Catat pengeluaran langsung dari suara di Chrome HP.
+            </p>
+          </div>
+          <div
+            class="hidden sm:flex h-10 w-10 items-center justify-center rounded-full border border-cyan-200/20 bg-cyan-300/5 text-cyan-200"
+          >
+            <i data-lucide="audio-lines" width="19"></i>
+          </div>
+        </div>
+      </header>
+
+      <main class="hero-wrap pt-2">
+        <section class="phone-stage">
+          <!-- ================= PHONE 1 ================= -->
+          <article class="phone">
+            <div class="screen home-screen">
+              <div class="notch"></div>
+
+              <div class="statusbar">
+                <span id="phone-time">21.43</span>
+                <span class="flex gap-1">
+                  <i data-lucide="signal" width="12"></i>
+                  <i data-lucide="wifi" width="12"></i>
+                  <i data-lucide="battery-full" width="13"></i>
+                </span>
+              </div>
+
+              <div id="voice-widget" class="widget">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="text-xl font-bold">FinVoice</h2>
+                    <p class="mt-1 text-xs text-slate-300">
+                      Catat keuangan dengan suara
+                    </p>
+                  </div>
+                  <span
+                    id="live-badge"
+                    class="rounded-full bg-cyan-300/10 px-2 py-1 text-[9px] font-bold tracking-wider text-cyan-200"
+                  >
+                    LIVE
+                  </span>
+                </div>
+
+                <div class="mt-4 flex items-start gap-4">
+                  <button
+                    id="mic-button"
+                    class="mic-button"
+                    type="button"
+                    aria-label="Mulai rekam suara"
+                  >
+                    <i data-lucide="mic" width="29" height="29"></i>
+                  </button>
+
+                  <div class="min-w-0 flex-1">
+                    <p
+                      id="voice-status"
+                      class="text-sm font-semibold text-white"
+                      aria-live="polite"
+                    >
+                      Tap untuk bicara
+                    </p>
+
+                    <div class="wave" aria-hidden="true">
+                      <b></b><b></b><b></b><b></b><b></b>
+                    </div>
+
+                    <div
+                      id="transcript-box"
+                      class="transcript-box mt-1 min-h-[40px] text-xs leading-5"
+                    >
+                      <span id="voice-transcript"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="mt-3 text-[11px] text-slate-400">
+                  Tekan microphone → bicara → tunggu transkrip selesai.
+                </p>
+
+                <!-- KONFIRMASI DINAMIS -->
+                <div id="confirm-box" class="confirm-box hidden">
+                  <div
+                    class="flex items-center gap-2 text-[11px] font-bold text-violet-200"
+                  >
+                    <i data-lucide="sparkles" width="14"></i>
+                    AI membaca transaksi
+                  </div>
+
+                  <div class="mt-2 text-xs">
+                    <div class="flex justify-between gap-2">
+                      <span class="text-slate-400">Transaksi</span>
+                      <strong id="confirm-name">-</strong>
+                    </div>
+
+                    <div class="flex justify-between gap-2 mt-1">
+                      <span class="text-slate-400">Nominal</span>
+                      <strong id="confirm-amount">-</strong>
+                    </div>
+
+                    <div class="flex justify-between gap-2 mt-1">
+                      <span class="text-slate-400">Kategori</span>
+                      <strong id="confirm-category">-</strong>
+                    </div>
+                  </div>
+
+                  <div class="confirm-actions">
+                    <button id="cancel-confirm" class="cancel-btn">
+                      Koreksi
+                    </button>
+                    <button id="save-confirm" class="confirm-btn">
+                      ✓ Catat
+                    </button>
+                  </div>
+                </div>
+
+                <!-- HASIL DINAMIS -->
+                <div id="success-box" class="success-box hidden">
+                  <div
+                    class="flex items-center gap-2 font-semibold text-emerald-100"
+                  >
+                    <i data-lucide="check-circle-2" width="15"></i>
+                    <span id="success-title">Berhasil dicatat</span>
+                  </div>
+
+                  <div class="mt-2 flex justify-between gap-2 text-xs">
+                    <span id="success-name">-</span>
+                    <strong id="success-amount">-</strong>
+                  </div>
+
+                  <p id="success-category" class="mt-1 text-emerald-200/80">
+                    -
+                  </p>
+
+                  <p
+                    id="success-transcript"
+                    class="mt-2 text-[10px] leading-4 text-slate-400"
+                  >
+                    -
+                  </p>
+                </div>
+              </div>
+
+              <div class="app-grid">
+                <div class="app-icon text-blue-300">
+                  <i data-lucide="message-circle" width="21"></i>
+                </div>
+
+                <div class="app-icon text-red-300">
+                  <i data-lucide="play" width="21"></i>
+                </div>
+
+                <div class="app-icon text-green-300">
+                  <i data-lucide="camera" width="21"></i>
+                </div>
+
+                <div class="app-icon text-amber-200">
+                  <i data-lucide="image" width="21"></i>
+                </div>
+
+                <div class="app-icon text-violet-300">
+                  <i data-lucide="mail" width="21"></i>
+                </div>
+
+                <div class="app-icon text-cyan-200">
+                  <i data-lucide="music-2" width="21"></i>
+                </div>
+
+                <div class="app-icon text-rose-300">
+                  <i data-lucide="heart" width="21"></i>
+                </div>
+
+                <div class="app-icon text-indigo-200">
+                  <i data-lucide="settings" width="21"></i>
+                </div>
+              </div>
+
+              <div class="search-pill">
+                <i data-lucide="search" width="16"></i>
+                <span>Telusuri aplikasi</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- ================= FLOW ================= -->
+          <aside id="flow-indicator" class="flow">
+            <i data-lucide="mic" width="19" class="text-cyan-200"></i>
+
+            <span class="font-mono text-[9px] tracking-wider">
+              VOICE INPUT
+            </span>
+
+            <div class="flow-line"></div>
+
+            <span
+              class="rounded-full border border-violet-300/20 bg-violet-300/10 px-2 py-1 font-mono text-[10px] text-violet-200"
+            >
+              AI
+            </span>
+
+            <div class="flow-line"></div>
+
+            <span class="font-mono text-[9px] tracking-wider">
+              TRANSACTION
+            </span>
+          </aside>
+
+          <!-- ================= PHONE 2 ================= -->
+          <article class="phone">
+            <div class="screen finance-screen">
+              <div class="notch"></div>
+
+              <div class="statusbar">
+                <span id="phone-time-2">21.43</span>
+                <span class="flex gap-1">
+                  <i data-lucide="signal" width="12"></i>
+                  <i data-lucide="wifi" width="12"></i>
+                  <i data-lucide="battery-full" width="13"></i>
+                </span>
+              </div>
+
+              <div class="px-5 pt-6">
+                <p class="text-[11px] tracking-wide text-slate-400">
+                  RINGKASAN KEUANGAN
+                </p>
+
+                <h2 class="mt-1 text-xl font-bold">Pengelola Keuangan</h2>
+              </div>
+
+              <div class="money-card">
+                <div class="flex justify-between gap-3">
+                  <div>
+                    <p class="text-[10px] text-slate-400">Pengeluaran</p>
+
+                    <p
+                      id="expense-total"
+                      class="metric-value mt-1 text-sm font-bold text-rose-200"
+                    >
+                      Rp1.186.700
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-[10px] text-slate-400">Pemasukan</p>
+
+                    <p
+                      id="income-total"
+                      class="metric-value mt-1 text-sm font-bold text-emerald-200"
+                    >
+                      Rp1.970.000
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-4 border-t border-slate-400/10 pt-3">
+                  <p class="text-[10px] text-slate-400">Saldo</p>
+
+                  <p
+                    id="balance-total"
+                    class="metric-value mt-1 text-2xl font-bold"
+                  >
+                    Rp783.300
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between px-5 pt-2">
+                <h3 class="text-sm font-semibold">Transaksi terbaru</h3>
+
+                <span class="text-[10px] text-cyan-200"> Realtime </span>
+              </div>
+
+              <div id="transaction-list" class="transaction-list">
+                <!-- TRANSAKSI STATIS -->
+                <div class="tx-row">
+                  <div class="tx-icon">
+                    <i data-lucide="wallet" width="15"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Uang Saku</p>
+                    <p class="text-[10px] text-slate-400">Pemasukan</p>
+                  </div>
+                  <strong class="text-xs text-emerald-200"> +Rp500.000 </strong>
+                </div>
+
+                <div class="tx-row">
+                  <div class="tx-icon">
+                    <i data-lucide="house" width="15"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Nyicil kontrakan</p>
+                    <p class="text-[10px] text-slate-400">Hunian</p>
+                  </div>
+                  <strong class="text-xs text-rose-200"> -Rp500.000 </strong>
+                </div>
+
+                <div class="tx-row">
+                  <div class="tx-icon">
+                    <i data-lucide="send" width="15"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">TF mas Agus</p>
+                    <p class="text-[10px] text-slate-400">Transfer</p>
+                  </div>
+                  <strong class="text-xs text-rose-200"> -Rp200.000 </strong>
+                </div>
+
+                <div class="tx-row">
+                  <div class="tx-icon">
+                    <i data-lucide="smartphone" width="15"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Telkomsel</p>
+                    <p class="text-[10px] text-slate-400">Tagihan</p>
+                  </div>
+                  <strong class="text-xs text-rose-200"> -Rp66.600 </strong>
+                </div>
+
+                <div class="tx-row">
+                  <div class="tx-icon">
+                    <i data-lucide="graduation-cap" width="15"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Softcofer Skripsi</p>
+                    <p class="text-[10px] text-slate-400">Pendidikan</p>
+                  </div>
+                  <strong class="text-xs text-rose-200"> -Rp154.600 </strong>
+                </div>
+              </div>
+
+              <!-- DETAIL -->
+              <section
+                id="detail-sheet"
+                class="detail-sheet"
+                aria-hidden="true"
+              >
+                <div class="detail-card">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold">Detail Transaksi</h3>
+
+                    <i
+                      data-lucide="receipt-text"
+                      width="19"
+                      class="text-cyan-200"
+                    >
+                    </i>
+                  </div>
+
+                  <p id="detail-name" class="mt-4 text-xl font-bold">-</p>
+
+                  <div class="mt-3">
+                    <div class="detail-row">
+                      <span>Nominal</span>
+                      <span id="detail-amount">-</span>
+                    </div>
+
+                    <div class="detail-row">
+                      <span>Kategori</span>
+                      <span id="detail-category">-</span>
+                    </div>
+
+                    <div class="detail-row">
+                      <span>Jenis</span>
+                      <span id="detail-type">-</span>
+                    </div>
+
+                    <div class="detail-row">
+                      <span>Tanggal</span>
+                      <span id="detail-date">-</span>
+                    </div>
+
+                    <div class="detail-row">
+                      <span>Metode Input</span>
+                      <span>Voice Input</span>
+                    </div>
+
+                    <div class="detail-row">
+                      <span>Transkrip</span>
+                      <span id="detail-transcript">-</span>
+                    </div>
+                  </div>
+
+                  <button
+                    id="done-button"
+                    class="mt-5 w-full rounded-xl bg-cyan-200 py-2 text-xs font-bold text-slate-950"
+                  >
+                    Selesai
+                  </button>
+                </div>
+              </section>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="hero-wrap pt-2 text-center">
+        <p class="text-xs text-slate-500">
+          Prototype demo interaktif — bukan aplikasi finansial produksi.
+        </p>
+
+        <p id="browser-note" class="mt-2 text-[10px] text-slate-600">
+          Realtime voice engine: browser speech recognition
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+
+        const micButton = document.getElementById('mic-button');
+        const voiceWidget = document.getElementById('voice-widget');
+        const voiceStatus = document.getElementById('voice-status');
+        const transcriptEl = document.getElementById('voice-transcript');
+        const confirmBox = document.getElementById('confirm-box');
+        const successBox = document.getElementById('success-box');
+        const flow = document.getElementById('flow-indicator');
+
+        const confirmName = document.getElementById('confirm-name');
+        const confirmAmount = document.getElementById('confirm-amount');
+        const confirmCategory = document.getElementById('confirm-category');
+
+        const successTitle = document.getElementById('success-title');
+        const successName = document.getElementById('success-name');
+        const successAmount = document.getElementById('success-amount');
+        const successCategory = document.getElementById('success-category');
+        const successTranscript = document.getElementById('success-transcript');
+
+        const expenseEl = document.getElementById('expense-total');
+        const incomeEl = document.getElementById('income-total');
+        const balanceEl = document.getElementById('balance-total');
+        const list = document.getElementById('transaction-list');
+
+        const detailSheet = document.getElementById('detail-sheet');
+
+        let recognition = null;
+        let listening = false;
+        let finalTranscript = '';
+        let pendingTransaction = null;
+
+        let expenseTotal = 1186700;
+        let incomeTotal = 1970000;
+        let balanceTotal = 783300;
+
+        /* ================= UTIL ================= */
+
+        function rupiah(value) {
+          return (
+            (value < 0 ? '-' : '') +
+            'Rp' +
+            Math.abs(value).toLocaleString('id-ID')
+          );
+        }
+
+        function cleanText(text) {
+          return text
+            .toLowerCase()
+            .replace(/[.,!?]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+
+        /* ================= ANGKA ================= */
+
+        const units = {
+          nol: 0,
+          satu: 1,
+          dua: 2,
+          tiga: 3,
+          empat: 4,
+          lima: 5,
+          enam: 6,
+          tujuh: 7,
+          delapan: 8,
+          sembilan: 9,
+          sepuluh: 10,
+          sebelas: 11,
+          seratus: 100,
+          seribu: 1000,
+          sejuta: 1000000,
+        };
+
+        function parseIndonesianNumber(text) {
+          let t = String(text)
+            .toLowerCase()
+            .replace(/\blapan\b/g, 'delapan')
+            .replace(/\bmilyar\b/g, 'miliar')
+            .replace(/\btrilyun\b/g, 'triliun')
+            .replace(/\brp\b/g, ' ')
+            .replace(/[!?]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          const scaleValue = {
+            k: 1000,
+            ribu: 1000,
+            juta: 1000000,
+            miliar: 1000000000,
+            triliun: 1000000000000,
+          };
+
+          const digitWords = {
+            nol: 0,
+            satu: 1,
+            dua: 2,
+            tiga: 3,
+            empat: 4,
+            lima: 5,
+            enam: 6,
+            tujuh: 7,
+            delapan: 8,
+            sembilan: 9,
+          };
+
+          const allNumberWords = [
+            'nol',
+            'satu',
+            'dua',
+            'tiga',
+            'empat',
+            'lima',
+            'enam',
+            'tujuh',
+            'delapan',
+            'sembilan',
+            'sepuluh',
+            'sebelas',
+            'belas',
+            'puluh',
+            'seratus',
+            'ratus',
+            'setengah',
+          ];
+
+          /*
+           * ==========================================================
+           * WORD MATH
+           * ==========================================================
+           *
+           * lima puluh empat -> 54
+           * dua puluh -> 20
+           * dua belas -> 12
+           * seratus lima puluh -> 150
+           * dua lima -> 25
+           * dua lapan -> 28
+           */
+          function wordToNumber(tokens) {
+            let total = 0;
+            let current = 0;
+
+            for (let i = 0; i < tokens.length; i++) {
+              const w = tokens[i];
+
+              if (w === 'setengah') {
+                current += 0.5;
+                continue;
+              }
+
+              if (w === 'sepuluh') {
+                current += 10;
+                continue;
+              }
+
+              if (w === 'sebelas') {
+                current += 11;
+                continue;
+              }
+
+              if (Object.prototype.hasOwnProperty.call(digitWords, w)) {
+                const n = digitWords[w];
+
+                /*
+                 * dua belas
+                 */
+                if (i + 1 < tokens.length && tokens[i + 1] === 'belas') {
+                  current += 10 + n;
+                  i++;
+                  continue;
+                }
+
+                /*
+                 * dua lima -> 25
+                 * dua lapan -> 28
+                 *
+                 * Hanya kalau dua digit sederhana berdampingan.
+                 */
+                if (
+                  i + 1 < tokens.length &&
+                  Object.prototype.hasOwnProperty.call(
+                    digitWords,
+                    tokens[i + 1]
+                  ) &&
+                  digitWords[tokens[i + 1]] <= 9
+                ) {
+                  const next = digitWords[tokens[i + 1]];
+
+                  current += Number(String(n) + String(next));
+                  i++;
+                  continue;
+                }
+
+                current += n;
+                continue;
+              }
+
+              /*
+               * dua puluh
+               * lima puluh
+               */
+              if (w === 'puluh') {
+                if (current >= 1 && current <= 9) {
+                  current *= 10;
+                }
+                continue;
+              }
+
+              /*
+               * seratus
+               */
+              if (w === 'seratus') {
+                current += 100;
+                continue;
+              }
+
+              /*
+               * dua ratus
+               */
+              if (w === 'ratus') {
+                if (current === 0) current = 1;
+                current *= 100;
+                continue;
+              }
+            }
+
+            return total + current;
+          }
+
+          /*
+           * ==========================================================
+           * CARI SKALA
+           * ==========================================================
+           */
+          const scaleRegex = /\b(k|ribu|juta|miliar|triliun)\b/g;
+
+          /*
+           * ==========================================================
+           * 1. ANGKA DIGIT
+           * ==========================================================
+           *
+           * 5k
+           * 20 ribu
+           * 23,5k
+           * 12.5 juta
+           * 12k setengah
+           * 12 juta setengah
+           */
+          const digitRegex =
+            /(\d+(?:[.,]\d+)?)\s*(k|ribu|juta|miliar|triliun)\b/;
+
+          const digitMatch = t.match(digitRegex);
+
+          if (digitMatch) {
+            const number = Number(digitMatch[1].replace(',', '.'));
+
+            const scale = scaleValue[digitMatch[2]];
+
+            if (!Number.isNaN(number)) {
+              let result = number * scale;
+
+              /*
+               * 12k setengah
+               * 12 juta setengah
+               */
+              const after = t.slice(digitMatch.index + digitMatch[0].length);
+
+              if (/\bsetengah\b/.test(after)) {
+                result += scale * 0.5;
+              }
+
+              return Math.round(result);
+            }
+          }
+
+          /*
+           * ==========================================================
+           * 2. DIGIT + SETENGAH + SKALA
+           * ==========================================================
+           *
+           * 4 setengah k
+           * 23 setengah k
+           * 12 setengah juta
+           */
+          const digitHalfRegex =
+            /(\d+(?:[.,]\d+)?)\s+setengah\s+(k|ribu|juta|miliar|triliun)\b/;
+
+          const halfMatch = t.match(digitHalfRegex);
+
+          if (halfMatch) {
+            const number = Number(halfMatch[1].replace(',', '.'));
+
+            const scale = scaleValue[halfMatch[2]];
+
+            if (!Number.isNaN(number)) {
+              return Math.round((number + 0.5) * scale);
+            }
+          }
+
+          /*
+           * ==========================================================
+           * 3. ANGKA LANGSUNG
+           * ==========================================================
+           *
+           * 20.000
+           * 150000
+           */
+          const direct = t.match(/\b\d{1,3}(?:\.\d{3})+\b|\b\d{4,}\b/);
+
+          if (direct) {
+            const value = Number(direct[0].replace(/\./g, ''));
+
+            if (!Number.isNaN(value)) {
+              return value;
+            }
+          }
+
+          /*
+           * ==========================================================
+           * 4. WORD MATH DENGAN SKALA
+           * ==========================================================
+           *
+           * dua puluh ribu
+           * lima puluh empat ribu
+           * dua belas setengah ribu
+           * dua lapan setengah k
+           * seratus lima puluh ribu
+           *
+           * DAN bisa bercampur:
+           *
+           * dua juta lima ratus ribu
+           * dua juta lima ratus
+           */
+          const tokens = t.split(/\s+/);
+
+          let result = 0;
+          let currentTokens = [];
+          let lastScale = null;
+
+          for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+
+            /*
+             * ------------------------------------------------------
+             * SKALA
+             * ------------------------------------------------------
+             */
+            if (Object.prototype.hasOwnProperty.call(scaleValue, token)) {
+              const scale = scaleValue[token];
+
+              if (currentTokens.length) {
+                const value = wordToNumber(currentTokens);
+
+                result += value * scale;
+
+                currentTokens = [];
+              }
+
+              lastScale = scale;
+
+              continue;
+            }
+
+            /*
+             * ------------------------------------------------------
+             * SETENGAH SETELAH SKALA
+             * ------------------------------------------------------
+             *
+             * 12 juta setengah
+             * 12k setengah
+             */
+            if (
+              token === 'setengah' &&
+              lastScale !== null &&
+              currentTokens.length === 0
+            ) {
+              result += lastScale * 0.5;
+              continue;
+            }
+
+            /*
+             * ------------------------------------------------------
+             * WORD NUMBER
+             * ------------------------------------------------------
+             */
+            if (allNumberWords.includes(token)) {
+              currentTokens.push(token);
+            }
+          }
+
+          /*
+           * Sisa angka:
+           *
+           * dua juta lima ratus
+           *
+           * -> 2 juta + 500 ribu
+           */
+          if (currentTokens.length) {
+            let tail = wordToNumber(currentTokens);
+
+            if (result > 0) {
+              if (tail < 1000) {
+                tail *= 1000;
+              }
+
+              result += tail;
+            } else {
+              result = tail;
+            }
+          }
+
+          if (result > 0) {
+            return Math.round(result);
+          }
+
+          return null;
+        }
+
+        /* ================= KATEGORI ================= */
+
+        function detectCategory(text, income) {
+          const t = cleanText(text);
+
+          if (income) {
+            if (/\b(menang|lotre|hadiah|keuntungan|untung|bonus)\b/.test(t))
+              return 'Hadiah / Keuntungan';
+
+            if (
+              /\b(gaji|kerja|honor|freelance|jualan|jual|pendapatan|upah)\b/.test(
+                t
+              )
+            )
+              return 'Pendapatan';
+
+            if (/\b(saku|dikasih|kiriman|transfer)\b/.test(t))
+              return 'Pemasukan';
+
+            return 'Pemasukan';
+          }
+
+          if (/\b(iuran|sampah|kebersihan|kas|patungan)\b/.test(t))
+            return 'Iuran';
+
+          if (
+            /\b(listrik|pln|wifi|internet|telkomsel|pulsa|tagihan|air|pdam)\b/.test(
+              t
+            )
+          )
+            return 'Tagihan';
+
+          if (/\b(kos|kontrakan|kontrakan|sewa|rumah|hunian)\b/.test(t))
+            return 'Hunian';
+
+          if (/\b(transfer|tf|kirim uang|kirim)\b/.test(t)) return 'Transfer';
+
+          if (/\b(baju|kaos|celana|jaket|sepatu|sandal|pakaian)\b/.test(t))
+            return 'Pakaian';
+
+          if (
+            /\b(pupuk|benih|bibit|pestisida|herbisida|pertanian|tanaman|pertanian)\b/.test(
+              t
+            )
+          )
+            return 'Pertanian';
+
+          if (
+            /\b(skripsi|kuliah|buku|modul|fotokopi|print|pendidikan)\b/.test(t)
+          )
+            return 'Pendidikan';
+
+          if (/\b(obat|dokter|rumah sakit|kesehatan)\b/.test(t))
+            return 'Kesehatan';
+
+          if (
+            /\b(bensin|solar|parkir|ojek|gojek|grab|transport|bus|motor)\b/.test(
+              t
+            )
+          )
+            return 'Transportasi';
+
+          if (
+            /\b(cilok|bakso|sate|mie|nasi|ayam|gorengan|seblak|kopi|minum|minuman|makan|jajan)\b/.test(
+              t
+            )
+          )
+            return 'Makanan';
+
+          if (/\b(film|game|hiburan|konser|nonton)\b/.test(t)) return 'Hiburan';
+
+          if (/\b(beli|belanja|barang|shopping)\b/.test(t)) return 'Belanja';
+
+          return 'Lainnya';
+        }
+
+        /* ================= NAMA TRANSAKSI ================= */
+
+        function detectName(text) {
+          let t = cleanText(text);
+
+          t = t
+            .replace(/\b(rp|rupiah)\b/g, ' ')
+            .replace(/\b\d[\d.,]*\b/g, ' ')
+            .replace(
+              /\b(satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan|sepuluh|sebelas)\s+(ribu|juta)\b/g,
+              ' '
+            )
+            .replace(
+              /\b(dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\s+puluh\b/g,
+              ' '
+            )
+            .replace(
+              /\b(aku|saya|tadi|barusan|sebesar|seharga|senilai|untuk)\b/g,
+              ' '
+            )
+            .replace(
+              /\b(bayar|bayarkan|beli|belikan|membeli|dapat|mendapat|menerima|terima|transfer|tf|keluar|pengeluaran|pemasukan)\b/g,
+              ' '
+            )
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          t = t
+            .replace(/\b(k|ribu|juta|miliar|triliun)\b/g, ' ')
+            .replace(
+              /\b(setengah|puluh|belas|ratus|seratus|sepuluh|sebelas)\b/g,
+              ' '
+            )
+            .replace(
+              /\b(nol|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\b/g,
+              ' '
+            )
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (!t) return 'Transaksi';
+
+          let words = t.split(' ').filter(Boolean);
+
+          return words
+            .slice(0, 4)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        }
+
+        /* ================= PARSER TRANSAKSI ================= */
+
+        function parseTransaction(transcript) {
+          const t = cleanText(transcript);
+
+          const income =
+            /\b(dapat|dapet|mendapat|mendapatkan|terima|menerima|pemasukan|gaji|pendapatan|honor|upah|uang saku|dikasih|diberi|kiriman|bonus|hadiah|menang|lotre|keuntungan|untung|komisi)\b/i.test(
+              t
+            ) &&
+            !/\b(bayar|bayarkan|beli|belikan|membeli|pengeluaran|keluar|transfer|tf|kirim)\b/i.test(
+              t
+            );
+
+          const amount = parseIndonesianNumber(t);
+
+          if (!amount || amount <= 0) {
+            return null;
+          }
+
+          const category = detectCategory(t, income);
+          const name = detectName(transcript);
+
+          return {
+            id:
+              window.crypto && crypto.randomUUID
+                ? crypto.randomUUID()
+                : Date.now() + '-' + Math.random(),
+
+            name: name,
+            amount: income ? amount : -amount,
+            type: income ? 'Pemasukan' : 'Pengeluaran',
+            category: category,
+            transcript: transcript,
+            date: new Date(),
+          };
+        }
+
+        /* ================= TRANSKRIP REALTIME ================= */
+
+        function startVoice() {
+          if (listening) return;
+
+          const Recognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+
+          if (!Recognition) {
+            setError(
+              'Chrome ini tidak menyediakan voice recognition. Coba Chrome Android terbaru.'
+            );
+
+            return;
+          }
+
+          finalTranscript = '';
+          pendingTransaction = null;
+
+          transcriptEl.innerHTML = '';
+
+          confirmBox.classList.add('hidden');
+          successBox.classList.add('hidden');
+
+          listening = true;
+
+          voiceWidget.classList.add('is-listening');
+          flow.classList.add('active');
+          micButton.disabled = true;
+
+          voiceStatus.textContent = 'Mendengarkan...';
+
+          recognition = new Recognition();
+
+          recognition.lang = 'id-ID';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.maxAlternatives = 1;
+
+          recognition.onstart = () => {
+            voiceStatus.textContent = 'Silakan bicara...';
+          };
+
+          recognition.onresult = (event) => {
+            let transcript = '';
+            let interim = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const result = event.results[i];
+              const text = result[0].transcript.trim();
+
+              if (!text) continue;
+
+              if (result.isFinal) {
+                transcript += (transcript ? ' ' : '') + text;
+              } else {
+                interim += (interim ? ' ' : '') + text;
+              }
+            }
+
+            // Simpan hanya hasil final terbaru
+            finalTranscript = transcript;
+
+            transcriptEl.textContent =
+              finalTranscript + (interim ? ' ' + interim : '');
+          };
+
+          recognition.onerror = (event) => {
+            console.log('Speech error:', event.error);
+
+            if (event.error === 'no-speech') {
+              setError('Tidak ada suara terdeteksi.');
+            } else if (event.error === 'not-allowed') {
+              setError('Microphone ditolak. Izinkan microphone di Chrome.');
+            } else if (event.error === 'network') {
+              setError('Recognition membutuhkan koneksi internet.');
+            } else if (event.error !== 'aborted') {
+              setError('Voice recognition gagal: ' + event.error);
+            }
+          };
+
+          recognition.onend = () => {
+            /*
+      Jangan langsung proses kalau user belum
+      benar-benar selesai. Browser kadang
+      menghentikan recognition sendiri.
+    */
+
+            if (!listening) return;
+
+            if (finalTranscript.trim()) {
+              finishVoice();
+            } else {
+              setError('Belum ada kalimat yang tertangkap.');
+            }
+          };
+
+          try {
+            recognition.start();
+          } catch (error) {
+            console.error(error);
+
+            setError('Microphone gagal dimulai.');
+          }
+        }
+
+        /* ================= STOP + PROSES ================= */
+
+        function finishVoice() {
+          if (!listening) return;
+
+          listening = false;
+
+          voiceWidget.classList.remove('is-listening');
+
+          micButton.disabled = false;
+
+          if (recognition) {
+            try {
+              recognition.stop();
+            } catch (e) {}
+          }
+
+          const text = finalTranscript.trim();
+
+          if (!text) {
+            setError('Transkrip kosong.');
+
+            return;
+          }
+
+          flow.classList.add('active');
+
+          voiceStatus.textContent = 'Menganalisis transaksi...';
+
+          transcriptEl.innerHTML =
+            '<span class="transcript-final">“' + escapeHTML(text) + '”</span>';
+
+          /*
+    Tahap AI/PARSER BARU berjalan
+    SETELAH transkrip final tersedia.
+  */
+
+          setTimeout(() => {
+            const data = parseTransaction(text);
+
+            if (!data) {
+              setError(
+                'Transkrip sudah terbaca, tetapi nominal transaksi belum ditemukan.'
+              );
+
+              return;
+            }
+
+            pendingTransaction = data;
+
+            showConfirmation(data);
+          }, 500);
+        }
+
+        /* ================= KONFIRMASI ================= */
+
+        function showConfirmation(data) {
+          flow.classList.add('active');
+
+          voiceStatus.textContent = 'Periksa hasil sebelum dicatat';
+
+          confirmName.textContent = data.name;
+          confirmAmount.textContent = rupiah(data.amount);
+          confirmCategory.textContent = data.category;
+
+          confirmBox.classList.remove('hidden');
+
+          lucide.createIcons();
+        }
+
+        document
+          .getElementById('cancel-confirm')
+          .addEventListener('click', () => {
+            pendingTransaction = null;
+
+            confirmBox.classList.add('hidden');
+
+            flow.classList.remove('active');
+
+            voiceStatus.textContent = 'Silakan ulangi dengan microphone';
+          });
+
+        /* ================= SIMPAN ================= */
+
+        document
+          .getElementById('save-confirm')
+          .addEventListener('click', () => {
+            if (!pendingTransaction) return;
+
+            const data = pendingTransaction;
+
+            addTransaction(data);
+
+            pendingTransaction = null;
+
+            confirmBox.classList.add('hidden');
+
+            flow.classList.remove('active');
+
+            voiceStatus.textContent = 'Berhasil dicatat ✓';
+
+            showSuccess(data);
+          });
+
+        function showSuccess(data) {
+          successTitle.textContent =
+            data.amount < 0
+              ? 'Pengeluaran berhasil dicatat'
+              : 'Pemasukan berhasil dicatat';
+
+          successName.textContent = data.name;
+
+          successAmount.textContent = rupiah(data.amount);
+
+          successCategory.textContent = data.category;
+
+          successTranscript.textContent = '“' + data.transcript + '”';
+
+          successBox.classList.remove('hidden');
+
+          lucide.createIcons();
+        }
+
+        /* ================= TAMBAH TRANSAKSI ================= */
+
+        function addTransaction(data) {
+          if (data.amount < 0) {
+            expenseTotal += Math.abs(data.amount);
+          } else {
+            incomeTotal += data.amount;
+          }
+
+          balanceTotal += data.amount;
+
+          updateMoney();
+
+          const row = document.createElement('button');
+
+          row.type = 'button';
+
+          row.className = 'voice-row tx-row';
+
+          row.dataset.id = data.id;
+
+          row.innerHTML = `
+
+    <div class="tx-icon">
+      <i data-lucide="${
+        data.amount < 0 ? iconForCategory(data.category) : 'wallet'
+      }" width="15"></i>
+    </div>
+
+    <div class="min-w-0 flex-1">
+
+      <p class="text-[10px] text-cyan-100">
+        Hari ini • Voice
+      </p>
+
+      <p class="text-sm font-semibold">
+        ${escapeHTML(data.name)}
+      </p>
+
+      <p class="text-[10px] text-slate-400">
+        ${escapeHTML(data.category)}
+      </p>
+
+    </div>
+
+    <div class="text-right">
+
+      <p class="text-xs font-bold ${
+        data.amount < 0 ? 'text-rose-200' : 'text-emerald-200'
+      }">
+        ${rupiah(data.amount)}
+      </p>
+
+      <p class="mt-1 text-[9px] text-emerald-200">
+        ✓ Dicatat
+      </p>
+
+    </div>
+  `;
+
+          row.addEventListener('click', () => openDetail(data));
+
+          list.prepend(row);
+
+          lucide.createIcons();
+
+          setTimeout(() => {
+            expenseEl.classList.remove('changed');
+            balanceEl.classList.remove('changed');
+            incomeEl.classList.remove('changed');
+          }, 600);
+        }
+
+        function iconForCategory(category) {
+          const icons = {
+            Makanan: 'utensils',
+            Pakaian: 'shirt',
+            Tagihan: 'receipt',
+            Hunian: 'house',
+            Iuran: 'users',
+            Transfer: 'send',
+            Pertanian: 'sprout',
+            Pendidikan: 'graduation-cap',
+            Kesehatan: 'heart-pulse',
+            Transportasi: 'car',
+            Hiburan: 'gamepad-2',
+            Belanja: 'shopping-bag',
+            Pendapatan: 'briefcase',
+            Pemasukan: 'wallet',
+            Lainnya: 'circle-dollar-sign',
+          };
+
+          return icons[category] || 'circle-dollar-sign';
+        }
+
+        /* ================= UPDATE SALDO ================= */
+
+        function updateMoney() {
+          expenseEl.textContent = rupiah(expenseTotal);
+
+          incomeEl.textContent = rupiah(incomeTotal);
+
+          balanceEl.textContent = rupiah(balanceTotal);
+
+          expenseEl.classList.add('changed');
+          incomeEl.classList.add('changed');
+          balanceEl.classList.add('changed');
+        }
+
+        /* ================= DETAIL ================= */
+
+        function openDetail(data) {
+          document.getElementById('detail-name').textContent = data.name;
+
+          document.getElementById('detail-amount').textContent = rupiah(
+            Math.abs(data.amount)
+          );
+
+          document.getElementById('detail-category').textContent =
+            data.category;
+
+          document.getElementById('detail-type').textContent = data.type;
+
+          document.getElementById('detail-date').textContent = new Date(
+            data.date
+          ).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+
+          document.getElementById('detail-transcript').textContent =
+            '“' + data.transcript + '”';
+
+          detailSheet.classList.add('open');
+          detailSheet.setAttribute('aria-hidden', 'false');
+        }
+
+        document.getElementById('done-button').addEventListener('click', () => {
+          detailSheet.classList.remove('open');
+
+          detailSheet.setAttribute('aria-hidden', 'true');
+        });
+
+        /* ================= ERROR ================= */
+
+        function setError(message) {
+          listening = false;
+
+          voiceWidget.classList.remove('is-listening');
+
+          flow.classList.remove('active');
+
+          micButton.disabled = false;
+
+          voiceStatus.textContent = message;
+
+          confirmBox.classList.add('hidden');
+        }
+
+        /* ================= TRANSKRIP DISPLAY ================= */
+
+        function renderTranscript(finalText, interim) {
+          let html = '';
+
+          if (finalText) {
+            html +=
+              '<span class="transcript-final">“' +
+              escapeHTML(finalText) +
+              '”</span>';
+          }
+
+          if (interim) {
+            if (finalText) html += ' ';
+
+            html +=
+              '<span class="transcript-interim">' +
+              escapeHTML(interim) +
+              '</span>';
+          }
+
+          transcriptEl.innerHTML = html;
+        }
+
+        /* ================= ESCAPE HTML ================= */
+
+        function escapeHTML(value) {
+          return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+
+        /* ================= MIC ================= */
+
+        micButton.addEventListener('click', startVoice);
+
+        /* ================= TIME ================= */
+
+        function updateTime() {
+          const d = new Date();
+
+          const time =
+            String(d.getHours()).padStart(2, '0') +
+            ':' +
+            String(d.getMinutes()).padStart(2, '0');
+
+          document.getElementById('phone-time').textContent = time;
+
+          document.getElementById('phone-time-2').textContent = time;
+        }
+
+        updateTime();
+
+        setInterval(updateTime, 30000);
+
+        /* ================= INIT ================= */
+
+        if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+          document.getElementById('browser-note').textContent =
+            'Browser ini tidak mendukung Speech Recognition.';
+        }
+
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>
