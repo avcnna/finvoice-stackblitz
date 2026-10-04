@@ -850,12 +850,31 @@
                     </div>
                   </div>
 
-                  <button
-                    id="done-button"
-                    class="mt-5 w-full rounded-xl bg-cyan-200 py-2 text-xs font-bold text-slate-950"
-                  >
-                    Selesai
-                  </button>
+                  <div class="mt-5 grid grid-cols-2 gap-2">
+                    <button
+                      id="edit-button"
+                      type="button"
+                      class="w-full rounded-xl border border-cyan-200/25 bg-cyan-300/10 py-2 text-xs font-semibold text-cyan-100"
+                    >
+                      Edit
+                    </button>
+                  
+                    <button
+                      id="delete-button"
+                      type="button"
+                      class="w-full rounded-xl border border-rose-200/25 bg-rose-300/10 py-2 text-xs font-semibold text-rose-100"
+                    >
+                      Hapus
+                    </button>
+                  
+                    <button
+                      id="done-button"
+                      type="button"
+                      class="col-span-2 w-full rounded-xl bg-cyan-200 py-2 text-xs font-bold text-slate-950"
+                    >
+                      Selesai
+                    </button>
+                  </div>
                 </div>
               </section>
             </div>
@@ -907,6 +926,7 @@
         let listening = false;
         let finalTranscript = '';
         let pendingTransaction = null;
+        let currentTransaction = null;
 
         let expenseTotal = 1186700;
         let incomeTotal = 1970000;
@@ -956,7 +976,7 @@
             .replace(/\blapan\b/g, 'delapan')
             .replace(/\bmilyar\b/g, 'miliar')
             .replace(/\btrilyun\b/g, 'triliun')
-            .replace(/\brp\b/g, ' ')
+            .replace(/\brp(?=\s|\d)/g, ' ')
             .replace(/[!?]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
@@ -1435,7 +1455,7 @@
 
           const amount = parseIndonesianNumber(t);
 
-          if (!amount || amount <= 0) {
+          if (!Number.isFinite(amount) || amount <= 0) {
             return null;
           }
 
@@ -1798,6 +1818,8 @@
         /* ================= DETAIL ================= */
 
         function openDetail(data) {
+          currentTransaction = data;
+
           document.getElementById('detail-name').textContent = data.name;
 
           document.getElementById('detail-amount').textContent = rupiah(
@@ -1827,6 +1849,136 @@
         document.getElementById('done-button').addEventListener('click', () => {
           detailSheet.classList.remove('open');
 
+          detailSheet.setAttribute('aria-hidden', 'true');
+        });
+
+        document.getElementById('edit-button').addEventListener('click', () => {
+          if (!currentTransaction) return;
+
+          const newName = prompt(
+            'Nama transaksi:',
+            currentTransaction.name
+          );
+
+          if (newName === null) return;
+
+          const newAmountRaw = prompt(
+            'Nominal:',
+            String(Math.abs(currentTransaction.amount))
+          );
+
+          if (newAmountRaw === null) return;
+
+          const newCategory = prompt(
+            'Kategori:',
+            currentTransaction.category
+          );
+
+          if (newCategory === null) return;
+
+          const newAmount = Number(
+            String(newAmountRaw).replace(/[^\d]/g, '')
+          );
+
+          if (!newName.trim() || !newAmount) return;
+
+          const oldAmount = currentTransaction.amount;
+
+          // Update total lama
+          if (oldAmount < 0) {
+            expenseTotal -= Math.abs(oldAmount);
+          } else {
+            incomeTotal -= oldAmount;
+          }
+
+          // Update data transaksi
+          currentTransaction.name = newName.trim();
+          currentTransaction.amount =
+            oldAmount < 0 ? -newAmount : newAmount;
+          currentTransaction.category =
+            newCategory.trim() || 'Lainnya';
+
+          // Update total baru
+          if (currentTransaction.amount < 0) {
+            expenseTotal += Math.abs(currentTransaction.amount);
+          } else {
+            incomeTotal += currentTransaction.amount;
+          }
+
+          balanceTotal += currentTransaction.amount - oldAmount;
+
+          updateMoney();
+
+          // Update kartu transaksi
+          const row = [...list.querySelectorAll('button')].find(
+            (item) => item.dataset.id === currentTransaction.id
+          );
+
+          if (row) {
+            const nameEl = row.querySelector('.text-sm.font-semibold');
+            const categoryEl = row.querySelector('.text-\\[10px\\].text-slate-400');
+            const amountEl = row.querySelector('.text-xs.font-bold');
+
+            if (nameEl) {
+              nameEl.textContent = currentTransaction.name;
+            }
+
+            if (categoryEl) {
+              categoryEl.textContent = currentTransaction.category;
+            }
+
+            if (amountEl) {
+              amountEl.textContent = rupiah(
+                currentTransaction.amount
+              );
+
+              amountEl.className =
+                'text-xs font-bold ' +
+                (currentTransaction.amount < 0
+                  ? 'text-rose-200'
+                  : 'text-emerald-200');
+            }
+          }
+
+          openDetail(currentTransaction);
+        });
+
+        document.getElementById('delete-button').addEventListener('click', () => {
+          if (!currentTransaction) return;
+
+          const confirmed = confirm(
+            `Hapus transaksi "${currentTransaction.name}" sebesar ${rupiah(
+              Math.abs(currentTransaction.amount)
+            )}?`
+          );
+
+          if (!confirmed) return;
+
+          const targetId = currentTransaction.id;
+
+          // Koreksi saldo
+          if (currentTransaction.amount < 0) {
+            expenseTotal -= Math.abs(currentTransaction.amount);
+          } else {
+            incomeTotal -= currentTransaction.amount;
+          }
+
+          balanceTotal -= currentTransaction.amount;
+
+          updateMoney();
+
+          // Hapus kartu dari daftar
+          const row = [...list.querySelectorAll('button')].find(
+            (item) => item.dataset.id === targetId
+          );
+
+          if (row) {
+            row.remove();
+          }
+
+          currentTransaction = null;
+
+          detailSheet.classList.remove('open');
           detailSheet.setAttribute('aria-hidden', 'true');
         });
 
